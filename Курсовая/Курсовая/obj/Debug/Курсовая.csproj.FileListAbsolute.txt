@@ -1,0 +1,15 @@
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\bin\Debug\Курсовая.exe.config
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\bin\Debug\Курсовая.exe
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\bin\Debug\Курсовая.pdb
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая.csprojAssemblyReference.cache
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\MainWindow.g.cs
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\App.g.cs
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая_MarkupCompile.cache
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая_MarkupCompile.lref
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\MainWindow.baml
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая.g.resources
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая.Properties.Resources.resources
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая.csproj.GenerateResource.cache
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая.csproj.CoreCompileInputs.cache
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая.exe
+C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\Курсовая\obj\Debug\Курсовая.pdb
