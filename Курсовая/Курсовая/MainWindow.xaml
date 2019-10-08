@@ -57,7 +57,7 @@
                     <ColumnDefinition Width="3*"/>
                     <ColumnDefinition Width="3*"/>
                     <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="3*"/>                    
+                    <ColumnDefinition Width="3*"/>
                     <ColumnDefinition Width="3*"/>
                     <ColumnDefinition Width="3*"/>
                     <ColumnDefinition Width="3*"/>
@@ -76,7 +76,64 @@
                     <RowDefinition Height="3*"/>
                     <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
-                <Canvas Grid.Column="1" Grid.Row="2"/>
+                <Canvas x:Name="Pipe_Start" Grid.Column="1" Grid.Row="1"/>
+                <Canvas x:Name="Pipe_11" Grid.Column="1" Grid.Row="2" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_12" Grid.Column="2" Grid.Row="2" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_13" Grid.Column="3" Grid.Row="2" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_14" Grid.Column="4" Grid.Row="2" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_15" Grid.Column="5" Grid.Row="2" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_16" Grid.Column="6" Grid.Row="2" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_17" Grid.Column="7" Grid.Row="2" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_18" Grid.Column="8" Grid.Row="2" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_21" Grid.Column="1" Grid.Row="3" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_22" Grid.Column="2" Grid.Row="3" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_23" Grid.Column="3" Grid.Row="3" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_24" Grid.Column="4" Grid.Row="3" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_25" Grid.Column="5" Grid.Row="3" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_26" Grid.Column="6" Grid.Row="3" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_27" Grid.Column="7" Grid.Row="3" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_28" Grid.Column="8" Grid.Row="3" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_31" Grid.Column="1" Grid.Row="4" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_32" Grid.Column="2" Grid.Row="4" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_33" Grid.Column="3" Grid.Row="4" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_34" Grid.Column="4" Grid.Row="4" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_35" Grid.Column="5" Grid.Row="4" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_36" Grid.Column="6" Grid.Row="4" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_37" Grid.Column="7" Grid.Row="4" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_38" Grid.Column="8" Grid.Row="4" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_41" Grid.Column="1" Grid.Row="5" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_42" Grid.Column="2" Grid.Row="5" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_43" Grid.Column="3" Grid.Row="5" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_44" Grid.Column="4" Grid.Row="5" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_45" Grid.Column="5" Grid.Row="5" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_46" Grid.Column="6" Grid.Row="5" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_47" Grid.Column="7" Grid.Row="5" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_48" Grid.Column="8" Grid.Row="5" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_51" Grid.Column="1" Grid.Row="6" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_52" Grid.Column="2" Grid.Row="6" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_53" Grid.Column="3" Grid.Row="6" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_54" Grid.Column="4" Grid.Row="6" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_55" Grid.Column="5" Grid.Row="6" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_56" Grid.Column="6" Grid.Row="6" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_57" Grid.Column="7" Grid.Row="6" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_58" Grid.Column="8" Grid.Row="6" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_61" Grid.Column="1" Grid.Row="7" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_62" Grid.Column="2" Grid.Row="7" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_63" Grid.Column="3" Grid.Row="7" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_64" Grid.Column="4" Grid.Row="7" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_65" Grid.Column="5" Grid.Row="7" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_66" Grid.Column="6" Grid.Row="7" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_67" Grid.Column="7" Grid.Row="7" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_68" Grid.Column="8" Grid.Row="7" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_71" Grid.Column="1" Grid.Row="8" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_72" Grid.Column="2" Grid.Row="8" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_73" Grid.Column="3" Grid.Row="8" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_74" Grid.Column="4" Grid.Row="8" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_75" Grid.Column="5" Grid.Row="8" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_76" Grid.Column="6" Grid.Row="8" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_77" Grid.Column="7" Grid.Row="8" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_78" Grid.Column="8" Grid.Row="8" MouseLeftButtonUp="LeftButtonClickPipe" MouseRightButtonUp="RightButtonClickPipe"/>
+                <Canvas x:Name="Pipe_End" Grid.Column="8" Grid.Row="9"/>
             </Grid>
 
         </Grid>
