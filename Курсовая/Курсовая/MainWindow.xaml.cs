@@ -23,8 +23,14 @@ namespace Курсовая
     /// </summary>
     public partial class MainWindow : Window
     {
-        string wayPipeImageStart, wayPipeImageStartWater, wayPipeImageEnd, wayPipeImageEndWater, wayPipeImageL, wayPipeImageLWater,
-            wayPipeImageI, wayPipeImageIWater; //пути к картинкам труб
+        private readonly string wayPipeImageStart = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\Start.jpg";
+        private readonly string wayPipeImageStartWater = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\StartWater.jpg";
+        private readonly string wayPipeImageEnd = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\End.jpg";
+        private readonly string wayPipeImageEndWater = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\EndWater.jpg";
+        private readonly string wayPipeImageL = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\L.jpg";
+        private readonly string wayPipeImageLWater = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\LWater.jpg";
+        private readonly string wayPipeImageI = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\I.jpg";
+        private readonly string wayPipeImageIWater = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\IWater.jpg";
         bool IsClickAble = true;//для контроля нажатия во время течения воды
                 
         enum ConectionType
@@ -43,31 +49,29 @@ namespace Курсовая
         int i = 0, j = 0; //переменные для обозначения двумерного массива во вшешнем событии = timer_tick
         DispatcherTimer timerForWater = new DispatcherTimer();//для потока воды
         DispatcherTimer timer;
+        byte secForTimer;
+        Canvas startPipe, endPipe;
+        byte maxRow, maxColumn;
+        Grid grid_sourse;
         private ConectionType conection = ConectionType.North;//указывает с какой стороны будет течь вода относительно данной ячейки
-        PipeObject[,] MasCanvas = new PipeObject[7, 8];//массив ячеек 
         Random random = new Random();//для генерации случайных чисел
+        PipeObject[,] MasCanvas;//массив ячеек 
+
+
         public MainWindow()
         {
             InitializeComponent();
-            string way = GetWay();
-            wayPipeImageStart = way + @"\Start.jpg";
-            wayPipeImageStartWater = way + @"\StartWater.jpg";
-            wayPipeImageEnd = way + @"\End.jpg";
-            wayPipeImageEndWater = way + @"\EndWater.jpg";
-            wayPipeImageL = way + @"\L.jpg";
-            wayPipeImageLWater = way + @"\LWater.jpg";
-            wayPipeImageI = way + @"\I.jpg";
-            wayPipeImageIWater = way + @"\IWater.jpg";
         }
 
         /// <summary>
         /// подготовка к новой игре
         /// </summary>
-        private void StartNewGame()
+        private void StartNewGame(byte second)
         {
             IsClickAble = true;
             GenerateMassivOfPipes();
             Timer.Value = 0;
+            secForTimer = second;
             timer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 10) };
             timer.Tick += Timer_Tick;
             timer.Start();
@@ -78,9 +82,9 @@ namespace Курсовая
             if (Timer.Value >= Timer.Maximum)
             {
                 timer.Stop();
-                ShowMessage("Поражение");
+                GoWater(null,null);
             }
-            else Timer.Value += 10000/3000;
+            else Timer.Value += 10000/ secForTimer / 100;
         }
 
         /// <summary>
@@ -89,41 +93,53 @@ namespace Курсовая
         private void TransferCanvasesFromGridToArray()
         {
             int i = 0, j = 0;
-            foreach (Canvas v in PipesGame.Children)
+            try
             {
-                if (v.Name == "Pipe_Start")
+                foreach (Canvas v in grid_sourse.Children)
                 {
-                    ImageBrush image = new ImageBrush
+                    if (v.Name.StartsWith("Pipe_Start"))
                     {
-                        ImageSource = new BitmapImage(new Uri(wayPipeImageStart, UriKind.Relative))
-                    };
-                    v.Background = image;
-                }
-                else if (v.Name == "Pipe_End")
-                {
-                    ImageBrush image = new ImageBrush
-                    {
-                        ImageSource = new BitmapImage(new Uri(wayPipeImageEnd, UriKind.Relative))
-                    };
-                    v.Background = image;
-                }
-                else
-                {
-                    MasCanvas[i, j] = new PipeObject
-                    {
-                        Canvas = v,
-                        rotateTransform = new RotateTransform
+                        try
                         {
-                            CenterX = 0.5,
-                            CenterY = 0.5,
+                            ImageBrush image = new ImageBrush
+                            {
+                                ImageSource = new BitmapImage(new Uri(wayPipeImageStart, UriKind.Relative))
+                            };
+                            v.Background = image;
                         }
-                    };
-                    if (++j == 8)
+                        catch (FileNotFoundException) { };
+                    }
+                    else if (v.Name.StartsWith("Pipe_End"))
                     {
-                        j = 0;
-                        i++;
+                        ImageBrush image = new ImageBrush
+                        {
+                            ImageSource = new BitmapImage(new Uri(wayPipeImageEnd, UriKind.Relative))
+                        };
+                        v.Background = image;
+                    }
+                    else
+                    {
+                        MasCanvas[i, j] = new PipeObject
+                        {
+                            Canvas = v,
+                            rotateTransform = new RotateTransform
+                            {
+                                CenterX = 0.5,
+                                CenterY = 0.5,
+                            }
+                        };
+                        if (++j == maxColumn)
+                        {
+                            j = 0;
+                            i++;
+                        }
                     }
                 }
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("Изображения не найдены", "Ошибка!");
+                Close();
             }
         }
         /// <summary>
@@ -133,60 +149,69 @@ namespace Курсовая
         {
             i = 0;
             j = 0;
-            while (!(i == 7 && j == 7))//повторять, пока не будет создана цельная цепочка
+            while (!(i == maxRow && j == maxColumn-1))//повторять, пока не будет создана цельная цепочка
             {
                 TransferCanvasesFromGridToArray();
+                conection = ConectionType.North;
                 i = 0;
                 j = 0;
                 conection = ConectionType.North;
                 bool continueGenerate = true;
                 while (continueGenerate)//создание цепочки
                 {
-                    if (!(i == 7 && j == 7) && MasCanvas[i, j].image == 0) PipeChainLogic();
+                    if (!(i == maxRow && j == maxColumn-1) && MasCanvas[i, j].image == 0) PipeChainLogic(maxRow,maxColumn);
                     else continueGenerate = false;
                 }
             }
             i = 0;
             j = 0;
-            foreach (Canvas v in PipesGame.Children)
+            try
             {
-                /// id вынести нельзя, тк в середине кода есть к нему обращение
-                if (v.Name != "Pipe_Start" && v.Name != "Pipe_End")
+                foreach (Canvas v in grid_sourse.Children)
                 {
-                    if (MasCanvas[i, j].image == 0)
+                    /// id вынести нельзя, тк в середине кода есть к нему обращение
+                    if (!v.Name.StartsWith("Pipe_"))
                     {
-                        switch (random.Next(2))
+                        if (MasCanvas[i, j].image == 0)
                         {
-                            case 0:
-                                {
-                                    ImageBrush image = new ImageBrush
+                            switch (random.Next(2))
+                            {
+                                case 0:
                                     {
-                                        ImageSource = new BitmapImage(new Uri(wayPipeImageL, UriKind.Relative))
-                                    };
-                                    v.Background = image;
-                                    MasCanvas[i, j].image = 'L';
-                                }
-                                break;
-                            default:
-                                {
-                                    ImageBrush image = new ImageBrush
+                                        ImageBrush image = new ImageBrush
+                                        {
+                                            ImageSource = new BitmapImage(new Uri(wayPipeImageL, UriKind.Relative))
+                                        };
+                                        v.Background = image;
+                                        MasCanvas[i, j].image = 'L';
+                                    }
+                                    break;
+                                default:
                                     {
-                                        ImageSource = new BitmapImage(new Uri(wayPipeImageI, UriKind.Relative))
-                                    };
-                                    v.Background = image;
-                                    MasCanvas[i, j].image = 'I';
-                                }
-                                break;
+                                        ImageBrush image = new ImageBrush
+                                        {
+                                            ImageSource = new BitmapImage(new Uri(wayPipeImageI, UriKind.Relative))
+                                        };
+                                        v.Background = image;
+                                        MasCanvas[i, j].image = 'I';
+                                    }
+                                    break;
+                            }
+                        }
+                        MasCanvas[i, j].rotateTransform.Angle = random.Next(4) * 90;
+                        MasCanvas[i, j].Canvas.Background.RelativeTransform = MasCanvas[i, j].rotateTransform;
+                        if (++j == maxColumn)
+                        {
+                            j = 0;
+                            i++;
                         }
                     }
-                    MasCanvas[i, j].rotateTransform.Angle = random.Next(4) * 90;
-                    MasCanvas[i, j].Canvas.Background.RelativeTransform = MasCanvas[i, j].rotateTransform;
-                    if (++j == 8)
-                    {
-                        j = 0;
-                        i++;
-                    }
                 }
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                MessageBox.Show("Изображения не найдены", "Ошибка!");
+                Close();
             }
 
         }
@@ -201,30 +226,40 @@ namespace Курсовая
         /// <param name="columnOffset">изменение столбца</param>
         private void DoPipeDate(PipeObject pipeObject, int angle, ConectionType conectionType, string way, sbyte lineOffset, sbyte columnOffset)
         {
-            ImageBrush image = new ImageBrush
+            try
             {
-                ImageSource = new BitmapImage(new Uri(way, UriKind.Relative))
-            };
-            pipeObject.Canvas.Background = image;
-            if (way == wayPipeImageL) pipeObject.image = 'L'; else pipeObject.image = 'I';
-            pipeObject.rotateTransform.Angle = angle;
-            pipeObject.Canvas.Background.RelativeTransform = MasCanvas[i, j].rotateTransform;
-            conection = conectionType;
-            i += lineOffset;
-            j += columnOffset;
+                ImageBrush image = new ImageBrush
+                {
+                    ImageSource = new BitmapImage(new Uri(way, UriKind.Relative))
+                };
+                pipeObject.Canvas.Background = image;
+                if (way == wayPipeImageL) pipeObject.image = 'L'; else pipeObject.image = 'I';
+                pipeObject.rotateTransform.Angle = angle;
+                pipeObject.Canvas.Background.RelativeTransform = MasCanvas[i, j].rotateTransform;
+                conection = conectionType;
+                i += lineOffset;
+                j += columnOffset;
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                MessageBox.Show("Изображения не найдены", "Ошибка!");
+                Close();
+            }
         }
         /// <summary>
         /// Логика для создания цепочки труб
         /// </summary>
-        private void PipeChainLogic()
+        private void PipeChainLogic(byte maxRow, byte maxColumn)
         {
+            maxRow--;
+            maxColumn--;
             switch (conection)
             {
                 case ConectionType.North:
                     {
-                        if (i == 6)//нижняя строка
+                        if (i == maxRow)//нижняя строка
                         {
-                            if (j != 7) //вся нижняя линяя кроме последней ячейки
+                            if (j != maxColumn) //вся нижняя линяя кроме последней ячейки
                             {
                                 DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, wayPipeImageL, 0, 1);//вправо
                             }
@@ -262,7 +297,7 @@ namespace Курсовая
                             }
                             else//все кроме левого столбца
                             {
-                                if (j == 7)//правый столбец
+                                if (j == maxColumn)//правый столбец
                                 {
                                     if (MasCanvas[i + 1, j].image != 0)//если снизу есть труба, то влево
                                     {
@@ -358,7 +393,7 @@ namespace Курсовая
                         {
                             if (i != 0)//все кроме верхнего и левого рядов
                             {
-                                if (i != 6)//все, кроме нижнего, верхнего и левого рядов.
+                                if (i != maxRow)//все, кроме нижнего, верхнего и левого рядов.
                                 {
                                     if (MasCanvas[i - 1, j].image != 0)//если сверху есть труба
                                     {
@@ -454,7 +489,7 @@ namespace Курсовая
                             }
                             else//все кроме левого столбца
                             {
-                                if (j == 7)//правый столбец
+                                if (j == maxColumn)//правый столбец
                                 {
                                     if (MasCanvas[i - 1, j].image != 0)//если сверху есть труба, то влево
                                     {
@@ -543,7 +578,7 @@ namespace Курсовая
                     } break;
                 case ConectionType.West:
                     {
-                        if (j == 7)//правый столбец, то вниз
+                        if (j == maxColumn)//правый столбец, то вниз
                         {
                             DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageL, 1, 0);//вниз
                         }
@@ -576,7 +611,7 @@ namespace Курсовая
                             }
                             else//все кроме верхнего и левого рядов
                             {
-                                if (i == 6)//нижний ряд
+                                if (i == maxRow)//нижний ряд
                                 {
                                     if (MasCanvas[i - 1, j].image != 0)//если сверху есть труба, то вправо
                                     {
@@ -664,19 +699,7 @@ namespace Курсовая
                     } break;
             }
         }
-        /// <summary>
-        /// Получение путя программы
-        /// </summary>
-        /// <returns>путь к папке -3 уровня</returns>
-        private string GetWay()
-        {
-            string way = Directory.GetCurrentDirectory();
-            way = way.Substring(0, way.LastIndexOf(@"\"));
-            way = way.Substring(0, way.LastIndexOf(@"\"));
-            way = way.Substring(0, way.LastIndexOf(@"\"));
-            way += @"\image";
-            return way;
-        }
+        
         /// <summary>
         /// Нажата кнопка "Выход"
         /// </summary>
@@ -695,6 +718,9 @@ namespace Курсовая
         {
             Game.Visibility = Visibility.Hidden;
             Menu.Visibility = Visibility.Visible;
+            PipesGame5x6.Visibility = Visibility.Hidden;
+            PipesGame7x8.Visibility = Visibility.Hidden;
+            PipesGame10x12.Visibility = Visibility.Hidden;
             timerForWater.Stop();//на случай, если выйти в меню во время течения воды
             timer.Stop();//остановить текущий таймер
         }
@@ -705,10 +731,7 @@ namespace Курсовая
         /// <param name="e"></param>
         private void GoToGame_Click(object sender, RoutedEventArgs e)
         {
-            Game.Visibility = Visibility.Visible;
-            Menu.Visibility = Visibility.Hidden;
-            Score.Content = "0";
-            StartNewGame();
+            ChoiceLevel.Visibility = Visibility.Visible;            
         }
         /// <summary>
         /// На трубу нажали левой кнопкой мыши. 
@@ -751,17 +774,25 @@ namespace Курсовая
         {
             if (IsClickAble)
             {
-                IsClickAble = false;
-                timer.Stop();
-                i = 0; j = 0;
-                ImageBrush image = new ImageBrush
+                try
                 {
-                    ImageSource = new BitmapImage(new Uri(wayPipeImageStartWater, UriKind.Relative))
-                };
-                Pipe_Start.Background = image;
-                timerForWater = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 250) };
-                timerForWater.Tick += TimerForWater_Tick;
-                timerForWater.Start();
+                    IsClickAble = false;
+                    timer.Stop();
+                    i = 0; j = 0;
+                    ImageBrush image = new ImageBrush
+                    {
+                        ImageSource = new BitmapImage(new Uri(wayPipeImageStartWater, UriKind.Relative))
+                    };
+                    startPipe.Background = image;
+                    timerForWater = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 250) };
+                    timerForWater.Tick += TimerForWater_Tick;
+                    timerForWater.Start();
+                }
+                catch (System.IO.FileNotFoundException)
+                {
+                    MessageBox.Show("Изображения не найдены", "Ошибка!");
+                    Close();
+                }
             }
         }
         /// <summary>
@@ -772,10 +803,72 @@ namespace Курсовая
         {
             timerForWater.Stop();
             MessageBox.Show(Message);
-            if (Message == "Победа!") Score.Content = Convert.ToString(Convert.ToDouble(Score.Content.ToString()) + (Timer.Maximum - Timer.Value) * 7 * 8 / 1000);
-            else Score.Content = "0";
-            StartNewGame();
+            if (Message == "Победа!")
+            {
+                if (Timer.Value == Timer.Maximum) Score.Content = Convert.ToString(Convert.ToDouble(Score.Content.ToString()) + 50);
+                Score.Content = Convert.ToString(Convert.ToDouble(Score.Content.ToString()) + (Timer.Maximum - Timer.Value) * 7 * 8 / 1000);
+                StartNewGame(20);
+            }
+            else 
+            {
+                GoToMenu_Click(null, null);
+            }
+            
         }
+
+        private void Easy_Click(object sender, RoutedEventArgs e)
+        {
+            ChoiceLevel.Visibility = Visibility.Hidden;
+            Game.Visibility = Visibility.Visible;
+            Menu.Visibility = Visibility.Hidden;
+            Score.Content = "0";
+            grid_sourse = PipesGame5x6;
+            startPipe = Pipe_Start5x6;
+            endPipe = Pipe_End5x6;
+            maxRow = 5;
+            maxColumn = 6;
+            PipesGame5x6.Visibility = Visibility.Visible;
+            MasCanvas = new PipeObject[maxRow, maxColumn];//массив ячеек 
+            StartNewGame(15);
+        }
+
+        private void Medium_Click(object sender, RoutedEventArgs e)
+        {
+            ChoiceLevel.Visibility = Visibility.Hidden;
+            Game.Visibility = Visibility.Visible;
+            Menu.Visibility = Visibility.Hidden;
+            Score.Content = "0";
+            startPipe = Pipe_Start7x8;
+            endPipe = Pipe_End7x8;
+            maxRow = 7;
+            maxColumn = 8;            
+            grid_sourse = PipesGame7x8;
+            PipesGame7x8.Visibility = Visibility.Visible;
+            MasCanvas = new PipeObject[maxRow, maxColumn];//массив ячеек 
+            StartNewGame(20);
+        }
+
+        private void Hard_Click(object sender, RoutedEventArgs e)
+        {
+            ChoiceLevel.Visibility = Visibility.Hidden;
+            Game.Visibility = Visibility.Visible;
+            Menu.Visibility = Visibility.Hidden;
+            Score.Content = "0";
+            grid_sourse = PipesGame10x12;
+            startPipe = Pipe_Start10x12;
+            endPipe = Pipe_End10x12;
+            maxRow = 10;
+            maxColumn = 12;
+            PipesGame10x12.Visibility = Visibility.Visible;
+            MasCanvas = new PipeObject[maxRow, maxColumn];//массив ячеек 
+            StartNewGame(25);
+        }
+
+        private void Сancel_Click(object sender, RoutedEventArgs e)
+        {
+            ChoiceLevel.Visibility = Visibility.Hidden;
+        }
+
         /// <summary>
         /// Логика изменения труб относительно течения воды
         /// </summary>
@@ -783,18 +876,26 @@ namespace Курсовая
         /// <param name="e"></param>
         private void TimerForWater_Tick(object sender, EventArgs e)
         {
-            if (i == 7 && j == 7)
+            if (i == maxRow && j == maxColumn-1)
             {
-                ImageBrush image = new ImageBrush
+                try
                 {
-                    ImageSource = new BitmapImage(new Uri(wayPipeImageEndWater, UriKind.Relative))
-                };
-                Pipe_End.Background = image;
-                ShowMessage("Победа!");
+                    ImageBrush image = new ImageBrush
+                    {
+                        ImageSource = new BitmapImage(new Uri(wayPipeImageEndWater, UriKind.Relative))
+                    };
+                    endPipe.Background = image;
+                    ShowMessage("Победа!");
+                }
+                catch (System.IO.FileNotFoundException)
+                {
+                    MessageBox.Show("Изображения не найдены", "Ошибка!");
+                    Close();
+                }
             }
             else
             {
-                if (i < 0 || i > 7 | j < 0 || j > 7)
+                if (i < 0 || i > maxRow | j < 0 || j > maxColumn-1)
                 {
                     ShowMessage("Поражение");
                 }
