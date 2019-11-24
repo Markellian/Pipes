@@ -1,20 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Threading;
 using System.Windows.Threading;
-using System.IO;
+using System.Drawing;
+using System.Windows.Interop;
 
 namespace Курсовая
 {
@@ -23,36 +15,38 @@ namespace Курсовая
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly string wayPipeImageStart = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\Start.jpg";
-        private readonly string wayPipeImageStartWater = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\StartWater.jpg";
-        private readonly string wayPipeImageEnd = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\End.jpg";
-        private readonly string wayPipeImageEndWater = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\EndWater.jpg";
-        private readonly string wayPipeImageL = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\L.jpg";
-        private readonly string wayPipeImageLWater = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\LWater.jpg";
-        private readonly string wayPipeImageI = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\I.jpg";
-        private readonly string wayPipeImageIWater = @"C:\Users\Nikke.tv\Desktop\Учеба\3.1\Курсовая\Курсовая\image\IWater.jpg";
+        private readonly Bitmap PipeImageStart = Properties.Resources.Start;
+        private readonly Bitmap PipeImageStartWater = Properties.Resources.StartWater;
+        private readonly Bitmap PipeImageEnd = Properties.Resources.End;
+        private readonly Bitmap PipeImageEndWater = Properties.Resources.EndWater;
+        private readonly Bitmap PipeImageL = Properties.Resources.L;
+        private readonly Bitmap PipeImageLWater = Properties.Resources.LWater;
+        private readonly Bitmap PipeImageI = Properties.Resources.I;
+        private readonly Bitmap PipeImageIWater = Properties.Resources.IWater;
+        private readonly string messageWin = "Победа!";
+        private readonly string messageLose = "Поражение!";
         bool IsClickAble = true;//для контроля нажатия во время течения воды
                 
-        enum ConectionType
+        enum ConectionType//для логики взаимодействия труб. указывает, откуда будет течь вода
         {
             North = 1,//верх
             East,//право
             South,//низ
             West//лево
         };
-        class PipeObject
+        class PipeObject//ячейка
         {
             public Canvas Canvas;
             public RotateTransform rotateTransform;
             public char image;
         }
-        int i = 0, j = 0; //переменные для обозначения двумерного массива во вшешнем событии = timer_tick
+        int i = 0, j = 0; //переменные для обозначения двумерного массива
         DispatcherTimer timerForWater = new DispatcherTimer();//для потока воды
-        DispatcherTimer timer;
-        byte secForTimer;
-        Canvas startPipe, endPipe;
-        byte maxRow, maxColumn;
-        Grid grid_sourse;
+        DispatcherTimer timer;//для таймера во время игры
+        byte secForTimer;//время для таймера
+        Canvas startPipe, endPipe;//для изменения картинок начальной и конечной труб
+        byte maxRow, maxColumn;//макимальное количество столбцов и строк
+        Grid grid_sourse;//для получения ячеек
         private ConectionType conection = ConectionType.North;//указывает с какой стороны будет течь вода относительно данной ячейки
         Random random = new Random();//для генерации случайных чисел
         PipeObject[,] MasCanvas;//массив ячеек 
@@ -61,6 +55,7 @@ namespace Курсовая
         public MainWindow()
         {
             InitializeComponent();
+            this.Background = CreateBrushFromBitmap(Properties.Resources.wall);
         }
 
         /// <summary>
@@ -76,7 +71,11 @@ namespace Курсовая
             timer.Tick += Timer_Tick;
             timer.Start();
         }
-
+        /// <summary>
+        /// Таймер во время игры
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Timer_Tick(object sender, EventArgs e)
         {
             if (Timer.Value >= Timer.Maximum)
@@ -84,7 +83,16 @@ namespace Курсовая
                 timer.Stop();
                 GoWater(null,null);
             }
-            else Timer.Value += 10000/ secForTimer / 100;
+            else Timer.Value += Timer.Maximum/ secForTimer / 100;
+        }
+        /// <summary>
+        /// Делает изображение из ресурса доступным для присвоения
+        /// </summary>
+        /// <param name="bmp">изображение из ресурса</param>
+        /// <returns></returns>
+        public static System.Windows.Media.Brush CreateBrushFromBitmap(Bitmap bmp)
+        {
+            return new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bmp.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions()));
         }
 
         /// <summary>
@@ -93,57 +101,38 @@ namespace Курсовая
         private void TransferCanvasesFromGridToArray()
         {
             int i = 0, j = 0;
-            try
+            foreach (Canvas v in grid_sourse.Children)
             {
-                foreach (Canvas v in grid_sourse.Children)
+                if (v.Name.StartsWith("Pipe_Start"))
                 {
-                    if (v.Name.StartsWith("Pipe_Start"))
+                    v.Background = (ImageBrush)CreateBrushFromBitmap(PipeImageStart);
+                }
+                else if (v.Name.StartsWith("Pipe_End"))
+                {
+                    
+                    v.Background = (ImageBrush)CreateBrushFromBitmap(PipeImageEnd);
+                }
+                else
+                {
+                    MasCanvas[i, j] = new PipeObject
                     {
-                        try
+                        Canvas = v,
+                        rotateTransform = new RotateTransform
                         {
-                            ImageBrush image = new ImageBrush
-                            {
-                                ImageSource = new BitmapImage(new Uri(wayPipeImageStart, UriKind.Relative))
-                            };
-                            v.Background = image;
+                            CenterX = 0.5,
+                            CenterY = 0.5,
                         }
-                        catch (FileNotFoundException) { };
-                    }
-                    else if (v.Name.StartsWith("Pipe_End"))
+                    };
+                    if (++j == maxColumn)
                     {
-                        ImageBrush image = new ImageBrush
-                        {
-                            ImageSource = new BitmapImage(new Uri(wayPipeImageEnd, UriKind.Relative))
-                        };
-                        v.Background = image;
-                    }
-                    else
-                    {
-                        MasCanvas[i, j] = new PipeObject
-                        {
-                            Canvas = v,
-                            rotateTransform = new RotateTransform
-                            {
-                                CenterX = 0.5,
-                                CenterY = 0.5,
-                            }
-                        };
-                        if (++j == maxColumn)
-                        {
-                            j = 0;
-                            i++;
-                        }
+                        j = 0;
+                        i++;
                     }
                 }
-            }
-            catch (FileNotFoundException)
-            {
-                MessageBox.Show("Изображения не найдены", "Ошибка!");
-                Close();
-            }
+            }            
         }
         /// <summary>
-        /// Добавление ячеек в массив. Добавления изображения в каждую ячейку
+        /// Подготовка ячеек к игре.
         /// </summary>
         private void GenerateMassivOfPipes()
         {
@@ -165,75 +154,54 @@ namespace Курсовая
             }
             i = 0;
             j = 0;
-            try
+            foreach (Canvas v in grid_sourse.Children)
             {
-                foreach (Canvas v in grid_sourse.Children)
+                /// id вынести нельзя, тк в середине кода есть к нему обращение
+                if (!v.Name.StartsWith("Pipe_"))
                 {
-                    /// id вынести нельзя, тк в середине кода есть к нему обращение
-                    if (!v.Name.StartsWith("Pipe_"))
+                    if (MasCanvas[i, j].image == 0)
                     {
-                        if (MasCanvas[i, j].image == 0)
+                        switch (random.Next(2))
                         {
-                            switch (random.Next(2))
-                            {
-                                case 0:
-                                    {
-                                        ImageBrush image = new ImageBrush
-                                        {
-                                            ImageSource = new BitmapImage(new Uri(wayPipeImageL, UriKind.Relative))
-                                        };
-                                        v.Background = image;
-                                        MasCanvas[i, j].image = 'L';
-                                    }
-                                    break;
-                                default:
-                                    {
-                                        ImageBrush image = new ImageBrush
-                                        {
-                                            ImageSource = new BitmapImage(new Uri(wayPipeImageI, UriKind.Relative))
-                                        };
-                                        v.Background = image;
-                                        MasCanvas[i, j].image = 'I';
-                                    }
-                                    break;
-                            }
-                        }
-                        MasCanvas[i, j].rotateTransform.Angle = random.Next(4) * 90;
-                        MasCanvas[i, j].Canvas.Background.RelativeTransform = MasCanvas[i, j].rotateTransform;
-                        if (++j == maxColumn)
-                        {
-                            j = 0;
-                            i++;
+                            case 0:
+                                {
+                                    v.Background = (ImageBrush)CreateBrushFromBitmap(PipeImageL);
+                                    MasCanvas[i, j].image = 'L';
+                                }
+                                break;
+                            default:
+                                {
+                                    v.Background = (ImageBrush)CreateBrushFromBitmap(PipeImageI);
+                                    MasCanvas[i, j].image = 'I';
+                                }
+                                break;
                         }
                     }
+                    MasCanvas[i, j].rotateTransform.Angle = random.Next(4) * 90;
+                    MasCanvas[i, j].Canvas.Background.RelativeTransform = MasCanvas[i, j].rotateTransform;
+                    if (++j == maxColumn)
+                    {
+                        j = 0;
+                        i++;
+                    }
                 }
-            }
-            catch (System.IO.FileNotFoundException)
-            {
-                MessageBox.Show("Изображения не найдены", "Ошибка!");
-                Close();
-            }
-
+            }    
         }
         /// <summary>
-        /// Изменение данных о трубе в ячейку
+        /// Изменение данных о трубе в ячейке
         /// </summary>
         /// <param name="pipeObject">ячейка</param>
         /// <param name="angle">угол поворота по часовой</param>
         /// <param name="conectionType">куда будет выходить эта труба</param>
-        /// <param name="way">путь к картинке</param>
+        /// <param name="image">путь к картинке</param>
         /// <param name="lineOffset">изменение строки</param>
         /// <param name="columnOffset">изменение столбца</param>
-        private void DoPipeDate(PipeObject pipeObject, int angle, ConectionType conectionType, string way, sbyte lineOffset, sbyte columnOffset)
+        private void DoPipeDate(PipeObject pipeObject, int angle, ConectionType conectionType, Bitmap image, sbyte lineOffset, sbyte columnOffset)
         {
             try
             {
-                ImageBrush image = new ImageBrush
-                {
-                    ImageSource = new BitmapImage(new Uri(way, UriKind.Relative))
-                };
-                pipeObject.Canvas.Background = image;
-                if (way == wayPipeImageL) pipeObject.image = 'L'; else pipeObject.image = 'I';
+                pipeObject.Canvas.Background = (ImageBrush)CreateBrushFromBitmap(image);
+                if (image == PipeImageL) pipeObject.image = 'L'; else pipeObject.image = 'I';
                 pipeObject.rotateTransform.Angle = angle;
                 pipeObject.Canvas.Background.RelativeTransform = MasCanvas[i, j].rotateTransform;
                 conection = conectionType;
@@ -246,6 +214,27 @@ namespace Курсовая
                 Close();
             }
         }
+        /// <summary>
+        /// Случайная генерация труб L вверх или вниз
+        /// </summary>
+        /// <param name="angleUp"></param>
+        /// <param name="angleDown"></param>
+        private void GoUpOrDpwn(int angleUp, int angleDown)
+        {
+            if (random.Next(2) == 0) DoPipeDate(MasCanvas[i, j], angleUp, ConectionType.South, PipeImageL, -1, 0);//вверх
+                else DoPipeDate(MasCanvas[i, j], angleDown, ConectionType.North, PipeImageL, 1, 0);//вниз                
+        }
+        /// <summary>
+        /// Случайная генерация труб L влево или вправо
+        /// </summary>
+        /// <param name="angelLeft"></param>
+        /// <param name="angelRight"></param>
+        private void GoLeftOrRight(int angelLeft, int angelRight)
+        {
+            if (random.Next(2) == 0) DoPipeDate(MasCanvas[i, j], angelLeft, ConectionType.East, PipeImageL, 0, -1);//влево
+                else DoPipeDate(MasCanvas[i, j], angelRight, ConectionType.West, PipeImageL, 0, 1);//вправо            
+        }
+
         /// <summary>
         /// Логика для создания цепочки труб
         /// </summary>
@@ -261,11 +250,11 @@ namespace Курсовая
                         {
                             if (j != maxColumn) //вся нижняя линяя кроме последней ячейки
                             {
-                                DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, PipeImageL, 0, 1);//вправо
                             }
                             else //последняя ячейка
                             {
-                                DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0);//вниз
+                                DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, 1, 0);//вниз
                             }
                         }
                         else //не последний ряд
@@ -274,23 +263,23 @@ namespace Курсовая
                             {
                                 if (MasCanvas[i, j + 1].image != 0)//если справа есть труба, то только вниз
                                 {
-                                    DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0);//вниз
+                                    DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, 1, 0);//вниз
                                 }
                                 else//если справа пусто, то вниз или вправо
                                 {
                                     if (MasCanvas[i + 1, j].image != 0)//если снизу есть труба, то вправо
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                        DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, PipeImageL, 0, 1);//вправо
                                     }
                                     else//если снизу нет трубы, то вправо или вниз
                                     {
                                         if (random.Next(2) == 0)
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                            DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, PipeImageL, 0, 1);//вправо
                                         }
                                         else
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0);//вниз
+                                            DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, 1, 0);//вниз
                                         }
                                     }
                                 }
@@ -301,83 +290,76 @@ namespace Курсовая
                                 {
                                     if (MasCanvas[i + 1, j].image != 0)//если снизу есть труба, то влево
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, wayPipeImageL, 0, -1);//влево
+                                        DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, PipeImageL, 0, -1);//влево
                                     }
                                     else
                                     {
                                         if (MasCanvas[i, j - 1].image != 0)//если слева есть труба, то только вниз
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0);//вниз
+                                            DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, 1, 0);//вниз
                                         }
                                         else//если слева нет трубы, то вниз или влево
                                         {
                                             if (random.Next(2) == 0)
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, wayPipeImageL, 0, -1);//влево
+                                                DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, PipeImageL, 0, -1);//влево
                                             }
                                             else
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0);//вниз
+                                                DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, 1, 0);//вниз
                                             }
                                         }
                                     }
                                 }
                                 else//все, кроме нижнего, левого и правого рядов.
                                 {
-                                    if (MasCanvas[i, j - 1].image != 0)//если слева есть труба
+                                    if (MasCanvas[i, j - 1].image != 0)//если слева есть труба; снизу и справа - нет
                                     {
                                         if (MasCanvas[i, j + 1].image != 0)//если справа есть труба, то вниз
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0);//вниз
+                                            DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, 1, 0);//вниз
                                         }
                                         else//справа нет трубы
                                         {
                                             if (MasCanvas[i, j - 1].image != 0)//снизу есть труба, то вправо
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                                DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, PipeImageL, 0, 1);//вправо
                                             }
                                             else//если справа трубы нет, то вниз или вправо
                                             {
                                                 if (random.Next(2) == 0)
                                                 {
-                                                    DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                                    DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, PipeImageL, 0, 1);//вправо
                                                 }
                                                 else
                                                 {
-                                                    DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0);//вниз
+                                                    DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, 1, 0);//вниз
                                                 }
                                             }
                                         }
                                     }
                                     else//слева трубы нет
                                     {
-                                        if ((MasCanvas[i, j + 1].image != 0))//если справа есть труба
+                                        if (MasCanvas[i, j - 1].image != 0)//снизу есть труба, 
                                         {
-                                            if (MasCanvas[i, j - 1].image != 0)//снизе есть труба, то влево
+                                            if (MasCanvas[i, j + 1].image != 0)//если справа есть труба
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, wayPipeImageL, 0, -1);//влево
+                                                DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, PipeImageL, 0, -1);//влево
                                             }
-                                            else//снизу нет трубы, то вниз или влево
+                                            else//справа нет трубы, то влево или вправо
                                             {
-                                                if (random.Next(2) == 0)
-                                                {
-                                                    DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, wayPipeImageL, 0, -1);//влево
-                                                }
-                                                else
-                                                {
-                                                    DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0);//вниз
-                                                }
+                                                GoLeftOrRight(90, 180);
                                             }
                                         }
                                         else//справа трубы нет, то вниз, влево или вправо
                                         {
                                             switch (random.Next(3))
                                             {
-                                                case 0: DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, wayPipeImageL, 0, -1); break;//влево
-                                                case 1: DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, wayPipeImageL, 0, 1); break;//вправо
-                                                case 2: DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, 1, 0); break;//вниз
+                                                case 0: DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, PipeImageL, 0, -1); break;//влево
+                                                case 1: DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, PipeImageL, 0, 1); break;//вправо
+                                                case 2: DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, 1, 0); break;//вниз
                                             }
-                                        }
+                                        }        
                                     }
                                 }
                             }
@@ -387,7 +369,7 @@ namespace Курсовая
                     {
                         if (j == 0)//левый столбец, то вниз
                         {
-                            DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, wayPipeImageL, 1, 0);//вниз
+                            DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, PipeImageL, 1, 0);//вниз
                         }
                         else //не левый столбец
                         {
@@ -399,23 +381,23 @@ namespace Курсовая
                                     {
                                         if (MasCanvas[i, j - 1].image != 0)//если слева есть труба, то вниз
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, wayPipeImageL, 1, 0);//вниз
+                                            DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, PipeImageL, 1, 0);//вниз
                                         }
                                         else//слева нет трубы
                                         {
                                             if (MasCanvas[i + 1, j].image != 0)//снизу есть труба, то влево
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, -1);//влево
+                                                DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, -1);//влево
                                             }
                                             else//если слева трубы нет, то вниз или влево
                                             {
                                                 if (random.Next(2) == 0)
                                                 {
-                                                    DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, -1);//влево
+                                                    DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, -1);//влево
                                                 }
                                                 else
                                                 {
-                                                    DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, wayPipeImageL, 1, 0);//вниз
+                                                    DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, PipeImageL, 1, 0);//вниз
                                                 }
                                             }
                                         }
@@ -426,27 +408,20 @@ namespace Курсовая
                                         {
                                             if (MasCanvas[i + 1, j].image != 0)//снизу есть труба, то вверх
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 180, ConectionType.South, wayPipeImageL, -1, 0);//вверх
+                                                DoPipeDate(MasCanvas[i, j], 180, ConectionType.South, PipeImageL, -1, 0);//вверх
                                             }
                                             else//снизу нет трубы, то вниз или вверх
                                             {
-                                                if (random.Next(2) == 0)
-                                                {
-                                                    DoPipeDate(MasCanvas[i, j], 180, ConectionType.South, wayPipeImageL, -1, 0);//вверх
-                                                }
-                                                else
-                                                {
-                                                    DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, wayPipeImageL, 1, 0);//вниз
-                                                }
+                                                GoUpOrDpwn(180, 270);
                                             }
                                         }
                                         else//слева трубы нет, то вниз, вверх или влево
                                         {
                                             switch (random.Next(3))
                                             {
-                                                case 0: DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, wayPipeImageL, 1, 0); break;//вниз
-                                                case 1: DoPipeDate(MasCanvas[i, j], 180, ConectionType.South, wayPipeImageL, -1, 0); break;//вверх
-                                                case 2: DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, -1); break;//влево 
+                                                case 0: DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, PipeImageL, 1, 0); break;//вниз
+                                                case 1: DoPipeDate(MasCanvas[i, j], 180, ConectionType.South, PipeImageL, -1, 0); break;//вверх
+                                                case 2: DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, -1); break;//влево 
                                             }
                                         }
                                     }
@@ -458,7 +433,7 @@ namespace Курсовая
                     {
                         if (i == 0)//верхняя строка
                         {
-                            DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                            DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, PipeImageL, 0, 1);//вправо
                         }
                         else //не верхний ряд
                         {
@@ -466,23 +441,23 @@ namespace Курсовая
                             {
                                 if (MasCanvas[i, j + 1].image != 0)//если справа есть труба, то вверх
                                 {
-                                    DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, -1, 0);//вверх
+                                    DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, -1, 0);//вверх
                                 }
                                 else//если справа пусто, то вверх или вправо
                                 {
                                     if (MasCanvas[i - 1, j].image != 0)//если сверху есть труба, то вправо
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                        DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, PipeImageL, 0, 1);//вправо
                                     }
                                     else//если сверху нет трубы, то вправо или вверх
                                     {
                                         if (random.Next(2) == 0)
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                            DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, PipeImageL, 0, 1);//вправо
                                         }
                                         else
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, -1, 0);//вверх
+                                            DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, -1, 0);//вверх
                                         }
                                     }
                                 }
@@ -493,23 +468,23 @@ namespace Курсовая
                                 {
                                     if (MasCanvas[i - 1, j].image != 0)//если сверху есть труба, то влево
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, wayPipeImageL, 0, -1);//влево
+                                        DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, PipeImageL, 0, -1);//влево
                                     }
                                     else
                                     {
                                         if (MasCanvas[i, j - 1].image != 0)//если слева есть труба, то только вверх
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, -1, 0);//вверх
+                                            DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, -1, 0);//вверх
                                         }
                                         else//если слева нет трубы, то вверх или влево
                                         {
                                             if (random.Next(2) == 0)
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, wayPipeImageL, 0, -1);//влево
+                                                DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, PipeImageL, 0, -1);//влево
                                             }
                                             else
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, -1, 0);//вверх
+                                                DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, -1, 0);//вверх
                                             }
                                         }
                                     }
@@ -520,67 +495,60 @@ namespace Курсовая
                                     {
                                         if (MasCanvas[i, j + 1].image != 0)//если справа есть труба, то вверх
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, -1, 0);//вверх
+                                            DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, -1, 0);//вверх
                                         }
                                         else//справа нет трубы
                                         {
                                             if (MasCanvas[i - 1, j].image != 0)//сверху есть труба, то вправо
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                                DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, PipeImageL, 0, 1);//вправо
                                             }
                                             else//если справа трубы нет, то вверх или вправо
                                             {
                                                 if (random.Next(2) == 0)
                                                 {
-                                                    DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, wayPipeImageL, 0, 1);//вправо
+                                                    DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, PipeImageL, 0, 1);//вправо
                                                 }
                                                 else
                                                 {
-                                                    DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, -1, 0);//вверх
+                                                    DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, -1, 0);//вверх
                                                 }
                                             }
                                         }
                                     }
                                     else//слева трубы нет
                                     {
-                                        if ((MasCanvas[i, j + 1].image != 0))//если справа есть труба
+                                        if (MasCanvas[i - 1, j].image != 0)//сверху есть труба
                                         {
-                                            if (MasCanvas[i - 1, j].image != 0)//сверху есть труба, то влево
+                                            if (MasCanvas[i, j + 1].image != 0)//справа есть труба, то влево
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, wayPipeImageL, 0, -1);//влево
+                                                DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, PipeImageL, 0, -1);
                                             }
-                                            else//сверху нет трубы, то вверх или влево
+                                            else//справа нет трубы, то ввправо или влево
                                             {
-                                                if (random.Next(2) == 0)
-                                                {
-                                                    DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, wayPipeImageL, 0, -1);//влево
-                                                }
-                                                else
-                                                {
-                                                    DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, -1, 0);//вверх
-                                                }
+                                                GoLeftOrRight(0, 270);
                                             }
+                                                                                      
                                         }
                                         else//справа трубы нет, то вверх, влево или вправо
                                         {
                                             switch (random.Next(3))
                                             {
-                                                case 0: DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, wayPipeImageL, 0, -1); break;//влево
-                                                case 1: DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, wayPipeImageL, 0, 1); break;//вправо 
-                                                case 2: DoPipeDate(MasCanvas[i, j], 0, conection, wayPipeImageI, -1, 0); break;//вверх
+                                                case 0: DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, PipeImageL, 0, -1); break;//влево
+                                                case 1: DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, PipeImageL, 0, 1); break;//вправо 
+                                                case 2: DoPipeDate(MasCanvas[i, j], 0, conection, PipeImageI, -1, 0); break;//вверх
                                             }
-                                        }
+                                        }                                        
                                     }
                                 }
                             }
                         }
-
                     } break;
                 case ConectionType.West:
                     {
                         if (j == maxColumn)//правый столбец, то вниз
                         {
-                            DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageL, 1, 0);//вниз
+                            DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, PipeImageL, 1, 0);//вниз
                         }
                         else //не правый столбец
                         {
@@ -588,23 +556,23 @@ namespace Курсовая
                             {
                                 if (MasCanvas[i, j + 1].image != 0)//если справа есть труба, то только вниз
                                 {
-                                    DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageL, 1, 0);//вниз
+                                    DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, PipeImageL, 1, 0);//вниз
                                 }
                                 else//если справа пусто, то вниз или вправо
                                 {
                                     if (MasCanvas[i + 1, j].image != 0)//если снизу есть труба, то вправо
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, 1);//вправо
+                                        DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, 1);//вправо
                                     }
                                     else//если снизу нет трубы, то вправо или вниз
                                     {
                                         if (random.Next(2) == 0)
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageL, 1, 0);//вниз
+                                            DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, PipeImageL, 1, 0);//вниз
                                         }
                                         else
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, 1);//вправо
+                                            DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, 1);//вправо
                                         }
                                     }
                                 }
@@ -615,23 +583,23 @@ namespace Курсовая
                                 {
                                     if (MasCanvas[i - 1, j].image != 0)//если сверху есть труба, то вправо
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, 1);//вправо
+                                        DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, 1);//вправо
                                     }
                                     else
                                     {
                                         if (MasCanvas[i, j - 1].image != 0)//если справа есть труба, то  вверх
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, wayPipeImageL, -1, 0);//вверх
+                                            DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, PipeImageL, -1, 0);//вверх
                                         }
                                         else//если сверху нет трубы, то вправо илли вверх
                                         {
                                             if (random.Next(2) == 0)
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, wayPipeImageL, -1, 0);//вверх
+                                                DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, PipeImageL, -1, 0);//вверх
                                             }
                                             else
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, 1);//вправо
+                                                DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, 1);//вправо
                                             }
                                         }
                                     }
@@ -642,23 +610,23 @@ namespace Курсовая
                                     {
                                         if (MasCanvas[i, j + 1].image != 0)//если справа есть труба, то вниз
                                         {
-                                            DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageL, 1, 0);//вниз
+                                            DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, PipeImageL, 1, 0);//вниз
                                         }
                                         else//справа нет трубы
                                         {
                                             if (MasCanvas[i + 1, j].image != 0)//снизу есть труба, то вправо
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, 1);//вправо
+                                                DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, 1);//вправо
                                             }
                                             else//если справа трубы нет, то вниз или вправо
                                             {
                                                 if (random.Next(2) == 0)
                                                 {
-                                                    DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, 1);//вправо
+                                                    DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, 1);//вправо
                                                 }
                                                 else
                                                 {
-                                                    DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageL, 1, 0);//вниз
+                                                    DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, PipeImageL, 1, 0);//вниз
                                                 }
                                             }
                                         }
@@ -669,27 +637,20 @@ namespace Курсовая
                                         {
                                             if (MasCanvas[i + 1, j].image != 0)//снизу есть труба, то вверх
                                             {
-                                                DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, wayPipeImageL, -1, 0);//вверх
+                                                DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, PipeImageL, -1, 0);//вверх
                                             }
                                             else//снизу нет трубы, то вниз или вверх
                                             {
-                                                if (random.Next(2) == 0)
-                                                {
-                                                    DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, wayPipeImageL, -1, 0);//вверх
-                                                }
-                                                else
-                                                {
-                                                    DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageL, 1, 0);//вниз
-                                                }
+                                                GoUpOrDpwn(90, 0);
                                             }
                                         }
                                         else//справа трубы нет, то вниз, вверх или вправо
                                         {
                                             switch (random.Next(3))
                                             {
-                                                case 0: DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageL, 1, 0); break;//вниз 
-                                                case 1: DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, wayPipeImageL, -1, 0); break;//вверх
-                                                case 2: DoPipeDate(MasCanvas[i, j], 90, conection, wayPipeImageI, 0, 1); break;//вправо 
+                                                case 0: DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, PipeImageL, 1, 0); break;//вниз 
+                                                case 1: DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, PipeImageL, -1, 0); break;//вверх
+                                                case 2: DoPipeDate(MasCanvas[i, j], 90, conection, PipeImageI, 0, 1); break;//вправо 
                                             }
                                         }
                                     }
@@ -731,6 +692,7 @@ namespace Курсовая
         /// <param name="e"></param>
         private void GoToGame_Click(object sender, RoutedEventArgs e)
         {
+            Menu.Visibility = Visibility.Hidden;
             ChoiceLevel.Visibility = Visibility.Visible;            
         }
         /// <summary>
@@ -762,7 +724,7 @@ namespace Курсовая
                 Canvas canvas = (Canvas)sender;
                 RotateTransform rt = (RotateTransform)canvas.Background.RelativeTransform;
                 rt.Angle -= 90;
-                rt.Angle %= 360;
+                if (rt.Angle == -90) rt.Angle = 270; 
             }
         }
         /// <summary>
@@ -774,101 +736,92 @@ namespace Курсовая
         {
             if (IsClickAble)
             {
-                try
-                {
-                    IsClickAble = false;
-                    timer.Stop();
-                    i = 0; j = 0;
-                    ImageBrush image = new ImageBrush
-                    {
-                        ImageSource = new BitmapImage(new Uri(wayPipeImageStartWater, UriKind.Relative))
-                    };
-                    startPipe.Background = image;
-                    timerForWater = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 250) };
-                    timerForWater.Tick += TimerForWater_Tick;
-                    timerForWater.Start();
-                }
-                catch (System.IO.FileNotFoundException)
-                {
-                    MessageBox.Show("Изображения не найдены", "Ошибка!");
-                    Close();
-                }
+                IsClickAble = false;
+                timer.Stop();
+                i = 0; j = 0;
+                startPipe.Background = (ImageBrush)CreateBrushFromBitmap(PipeImageStartWater);
+                timerForWater = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 250) };
+                timerForWater.Tick += TimerForWater_Tick;
+                timerForWater.Start();
             }
         }
         /// <summary>
-        /// Оповещение о победе/поражении
+        /// Оповещение о победе/поражении и выполнение соответствующих действий
         /// </summary>
         /// <param name="Message">текст оповещения</param>
         private void ShowMessage(string Message)
         {
             timerForWater.Stop();
-            MessageBox.Show(Message);
-            if (Message == "Победа!")
+            MessageBox.Show(Message, Message.Substring(0, Message.Length - 1));
+            if (Message == messageWin)
             {
-                if (Timer.Value == Timer.Maximum) Score.Content = Convert.ToString(Convert.ToDouble(Score.Content.ToString()) + 50);
+                if (Timer.Value == Timer.Maximum) Score.Content = Convert.ToString(Convert.ToDouble(Score.Content.ToString()) + 1);
                 Score.Content = Convert.ToString(Convert.ToDouble(Score.Content.ToString()) + (Timer.Maximum - Timer.Value) * 7 * 8 / 1000);
                 StartNewGame(20);
             }
-            else 
-            {
-                GoToMenu_Click(null, null);
-            }
-            
+            else  GoToMenu_Click(null, null);            
         }
-
+        /// <summary>
+        /// Уровень выбран
+        /// </summary>
+        /// <param name="GridSourse">Grid-иассив</param>
+        /// <param name="StartPipe">начальная труба</param>
+        /// <param name="EndPipe">Конечная труба</param>
+        /// <param name="rows">кол-во строк</param>
+        /// <param name="colomns">кол-во столбцов</param>
+        /// <param name="time">время в сек</param>
+        private void LevelChoiced(Grid GridSourse, Canvas StartPipe, Canvas EndPipe, byte rows, byte colomns, byte time)
+        {
+            ChoiceLevel.Visibility = Visibility.Hidden;
+            Game.Visibility = Visibility.Visible;
+            Menu.Visibility = Visibility.Hidden;
+            Score.Content = "0";
+            grid_sourse = GridSourse;
+            startPipe = StartPipe;
+            endPipe = EndPipe;
+            maxRow = rows;
+            maxColumn = colomns;
+            GridSourse.Visibility = Visibility.Visible;
+            MasCanvas = new PipeObject[maxRow, maxColumn];//массив ячеек 
+            StartNewGame(time);
+        }
+        /// <summary>
+        /// выбран легкий режим игры
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Easy_Click(object sender, RoutedEventArgs e)
         {
-            ChoiceLevel.Visibility = Visibility.Hidden;
-            Game.Visibility = Visibility.Visible;
-            Menu.Visibility = Visibility.Hidden;
-            Score.Content = "0";
-            grid_sourse = PipesGame5x6;
-            startPipe = Pipe_Start5x6;
-            endPipe = Pipe_End5x6;
-            maxRow = 5;
-            maxColumn = 6;
-            PipesGame5x6.Visibility = Visibility.Visible;
-            MasCanvas = new PipeObject[maxRow, maxColumn];//массив ячеек 
-            StartNewGame(15);
+            LevelChoiced(PipesGame5x6, Pipe_Start5x6, Pipe_End5x6 , 5, 6, 15);
         }
-
+        /// <summary>
+        /// выбран средний режим игры
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Medium_Click(object sender, RoutedEventArgs e)
         {
-            ChoiceLevel.Visibility = Visibility.Hidden;
-            Game.Visibility = Visibility.Visible;
-            Menu.Visibility = Visibility.Hidden;
-            Score.Content = "0";
-            startPipe = Pipe_Start7x8;
-            endPipe = Pipe_End7x8;
-            maxRow = 7;
-            maxColumn = 8;            
-            grid_sourse = PipesGame7x8;
-            PipesGame7x8.Visibility = Visibility.Visible;
-            MasCanvas = new PipeObject[maxRow, maxColumn];//массив ячеек 
-            StartNewGame(20);
+            LevelChoiced(PipesGame7x8, Pipe_Start7x8, Pipe_End7x8, 7, 8, 20);
         }
-
+        /// <summary>
+        /// выбран тяжелый режим игры
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Hard_Click(object sender, RoutedEventArgs e)
         {
-            ChoiceLevel.Visibility = Visibility.Hidden;
-            Game.Visibility = Visibility.Visible;
-            Menu.Visibility = Visibility.Hidden;
-            Score.Content = "0";
-            grid_sourse = PipesGame10x12;
-            startPipe = Pipe_Start10x12;
-            endPipe = Pipe_End10x12;
-            maxRow = 10;
-            maxColumn = 12;
-            PipesGame10x12.Visibility = Visibility.Visible;
-            MasCanvas = new PipeObject[maxRow, maxColumn];//массив ячеек 
-            StartNewGame(25);
+            LevelChoiced(PipesGame10x12, Pipe_Start10x12, Pipe_End10x12, 10, 12, 25);
         }
-
+        /// <summary>
+        /// нажата кнопка "Отмена"
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Сancel_Click(object sender, RoutedEventArgs e)
         {
             ChoiceLevel.Visibility = Visibility.Hidden;
+            Menu.Visibility = Visibility.Visible;
         }
-
         /// <summary>
         /// Логика изменения труб относительно течения воды
         /// </summary>
@@ -876,28 +829,16 @@ namespace Курсовая
         /// <param name="e"></param>
         private void TimerForWater_Tick(object sender, EventArgs e)
         {
-            if (i == maxRow && j == maxColumn-1)
+            if (i == maxRow && j == maxColumn - 1)
             {
-                try
-                {
-                    ImageBrush image = new ImageBrush
-                    {
-                        ImageSource = new BitmapImage(new Uri(wayPipeImageEndWater, UriKind.Relative))
-                    };
-                    endPipe.Background = image;
-                    ShowMessage("Победа!");
-                }
-                catch (System.IO.FileNotFoundException)
-                {
-                    MessageBox.Show("Изображения не найдены", "Ошибка!");
-                    Close();
-                }
+                endPipe.Background = (ImageBrush)CreateBrushFromBitmap(PipeImageEndWater);
+                ShowMessage(messageWin);
             }
             else
             {
-                if (i < 0 || i > maxRow | j < 0 || j > maxColumn-1)
+                if (i < 0 || i > maxRow | j < 0 || j > maxColumn - 1)
                 {
-                    ShowMessage("Поражение");
+                    ShowMessage(messageLose);
                 }
                 else
                 {
@@ -909,9 +850,9 @@ namespace Курсовая
                                 {
                                     switch (MasCanvas[i, j].rotateTransform.Angle % 360)
                                     {
-                                        case 90:  DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, wayPipeImageLWater, 0, -1); break;
-                                        case 180: DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, wayPipeImageLWater, 0, 1); break;
-                                        default: ShowMessage("Поражение"); break;
+                                        case 90: DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, PipeImageLWater, 0, -1); break;
+                                        case 180: DoPipeDate(MasCanvas[i, j], 180, ConectionType.West, PipeImageLWater, 0, 1); break;
+                                        default: ShowMessage(messageLose); break;
                                     }
                                 }
                                 break;
@@ -919,9 +860,9 @@ namespace Курсовая
                                 {
                                     switch (MasCanvas[i, j].rotateTransform.Angle % 360)
                                     {
-                                        case 180: DoPipeDate(MasCanvas[i, j], 180, ConectionType.South, wayPipeImageLWater, -1, 0); break;
-                                        case 270: DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, wayPipeImageLWater, 1, 0); break;
-                                        default: ShowMessage("Поражение"); break;
+                                        case 180: DoPipeDate(MasCanvas[i, j], 180, ConectionType.South, PipeImageLWater, -1, 0); break;
+                                        case 270: DoPipeDate(MasCanvas[i, j], 270, ConectionType.North, PipeImageLWater, 1, 0); break;
+                                        default: ShowMessage(messageLose); break;
                                     }
                                 }
                                 break;
@@ -929,9 +870,9 @@ namespace Курсовая
                                 {
                                     switch (MasCanvas[i, j].rotateTransform.Angle % 360)
                                     {
-                                        case 270: DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, wayPipeImageLWater, 0, 1); break; 
-                                        case 0:   DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, wayPipeImageLWater, 0, -1); break;
-                                        default: ShowMessage("Поражение"); break;
+                                        case 270: DoPipeDate(MasCanvas[i, j], 270, ConectionType.West, PipeImageLWater, 0, 1); break;
+                                        case 0: DoPipeDate(MasCanvas[i, j], 0, ConectionType.East, PipeImageLWater, 0, -1); break;
+                                        default: ShowMessage(messageLose); break;
                                     }
                                 }
                                 break;
@@ -939,9 +880,9 @@ namespace Курсовая
                                 {
                                     switch (MasCanvas[i, j].rotateTransform.Angle % 360)
                                     {
-                                        case 0:  DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageLWater, 1, 0); break; 
-                                        case 90: DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, wayPipeImageLWater, -1, 0); break;
-                                        default: ShowMessage("Поражение"); break;
+                                        case 0: DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, PipeImageLWater, 1, 0); break;
+                                        case 90: DoPipeDate(MasCanvas[i, j], 90, ConectionType.South, PipeImageLWater, -1, 0); break;
+                                        default: ShowMessage(messageLose); break;
                                     }
                                 }
                                 break;
@@ -955,36 +896,36 @@ namespace Курсовая
                                 {
                                     if (MasCanvas[i, j].rotateTransform.Angle % 180 == 0)
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, wayPipeImageIWater, 1, 0);
+                                        DoPipeDate(MasCanvas[i, j], 0, ConectionType.North, PipeImageIWater, 1, 0);
                                     }
-                                    else ShowMessage("Поражение");
+                                    else ShowMessage(messageLose);
                                 }
                                 break;
                             case ConectionType.East:
                                 {
                                     if (MasCanvas[i, j].rotateTransform.Angle % 180 == 90)
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, wayPipeImageIWater, 0, -1);
+                                        DoPipeDate(MasCanvas[i, j], 90, ConectionType.East, PipeImageIWater, 0, -1);
                                     }
-                                    else ShowMessage("Поражение");
+                                    else ShowMessage(messageLose);
                                 }
                                 break;
                             case ConectionType.South:
                                 {
                                     if (MasCanvas[i, j].rotateTransform.Angle % 180 == 0)
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 0, ConectionType.South, wayPipeImageIWater, -1, 0);
+                                        DoPipeDate(MasCanvas[i, j], 0, ConectionType.South, PipeImageIWater, -1, 0);
                                     }
-                                    else ShowMessage("Поражение");
+                                    else ShowMessage(messageLose);
                                 }
                                 break;
                             case ConectionType.West:
                                 {
                                     if (MasCanvas[i, j].rotateTransform.Angle % 180 == 90)
                                     {
-                                        DoPipeDate(MasCanvas[i, j], 90, ConectionType.West, wayPipeImageIWater, 0, 1);
+                                        DoPipeDate(MasCanvas[i, j], 90, ConectionType.West, PipeImageIWater, 0, 1);
                                     }
-                                    else ShowMessage("Поражение");
+                                    else ShowMessage(messageLose);
                                 }
                                 break;
                         }
@@ -994,3 +935,7 @@ namespace Курсовая
         }//Timer_tick        
     }
 }
+
+//оптимизация повторяющегося кода
+//отделить модель и вывод
+//интернационализация
